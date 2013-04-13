@@ -9,8 +9,9 @@ Falcore is a framework for constructing high performance, modular HTTP servers i
 You can [read the full documentation on Godoc.org](http://godoc.org/github.com/fitstar/falcore).
 
 ## Features
+
 * Modular and flexible design
-* Hot restart hooks for zero-downtime deploys
+* [Hot restart hooks](hot_restart.html) for zero-downtime deploys
 * Builtin statistics framework
 * Builtin logging framework
 * Compatible with `net/http` and Google App Engine

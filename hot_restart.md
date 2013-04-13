@@ -17,7 +17,7 @@ For more detail, lets look at `examples/hot_restart`.  When you start the applic
 
 * setup some signal handlers so you can trigger hot restart from outside
 * create a falcore server instance, which will
-* open a socket listener on the specified port.  this is what waits for new connections
+* open a socket listener on the specified port.  This is what waits for new connections
 
 Once the app is running, if you send it `SIGHUP`, it will:
 
@@ -33,7 +33,7 @@ At this point, we have a parent process (let's call it `A`) and a child process 
 * `A` receives `SIGUSR1` and calls `StopAccepting()` on the `falcore.Server` instance.  this will
 	* stop accepting new connections
 	* put falcore into a shutdown mode
-	
+
 From here on out, `B` is now your main server process.  Your socket listener was never unavailable.  You have hot restarted!  But what happens to existing connections on `A`?
 
 * any in flight requests will be completed
