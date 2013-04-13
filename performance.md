@@ -3,7 +3,7 @@ layout: default
 title: Measuring Falcore Performance
 ---
 
-One typical challenge encountered when running an application in a production environment is measuring performance of the various components.  It's generally very helpful to be able to see how your application is performing and it's critical to be able to track down the source of a performance issue.  Falcore will automatically track the performance breakdown of each request by pipeline stage.  It's easy to add your own, more granlar timings.  When each request completes, including being written out to the socket, you can review, log, or otherwise work with your performance data.
+The pipeline tracks performance timing on every stage in the pipeline and exposes that information in a final callback stage after the request/response has been completed.  This allows fine grained tracking of performance of requests as they traverse the pipeline including the IO read and write timings.  This information may be ignored or captured via the callback to do with as you please.
 
 Here’s a simple working example of a Falcore server that illustrates some of the features.
 
@@ -80,7 +80,11 @@ First, the pipeline is created and two trivial filter stages are added.  Then we
 
 There are three requests logged and the log output comes from the `request.Trace()` call.  You can clearly see our stages that we created and how long each took.
 
+### Request Ids
+
 Debugging production issues can be very difficult when the application is under heavy load.  Often the information necessary to resolve an issue is present in the log but lost in the noise of other requests.  Falcore tracks requests in the pipeline in two different ways to facilitate better debugging.  The first is that each request is given a unique ID when created.  Printing this value in your log messages allows you to easily grep the messages for a given request.  The output above shows the request ID to the right of the level “`[TRAC]`.”  
+
+### Signatures
 
 The second helpful feature is the request signature.  The signature is a unique identifier for each possible path through the pipeline.  Each pipeline stage has a status that defaults to zero, but if your stage changes the status, then Falcore will produce a different unique signature.  In the example above, the delayFilter randomly chooses to sleep and the choice is reflected in the status.  When you split your performance metrics based on the unique signatures, you can easily see the difference between the two request types (in this case, 0.2-0.3ms vs. 94.4ms).
 

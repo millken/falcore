@@ -6,6 +6,10 @@ title: Falcore
 
 Falcore is a framework for constructing high performance, modular HTTP servers in [Go][go] (sometimes called Golang).
 
+Falcore's architecture consists of an upstream pipeline where stages are run in sequence until a stage returns an HTTP Response.  There is a separate downstream pipeline which runs against the response before it is returned to the client.  Any stage may be arbitrarily complex, but you'll get extra benefits from breaking your application up into separate modules spread out over stages.
+
+One central benefit to pipelining approach is that it allows for code re-use.  Included in the repositories are filters for performing common HTTP server tasks such as response compression, etag matching, and serving files from disk.  Each of these filters, and any filters you write yourself, can easily be dropped into any Falcore pipeline.  Simply compose the features you want and start your server.
+
 You can [read the full documentation on Godoc.org](http://godoc.org/github.com/fitstar/falcore).
 
 ## Features
@@ -16,7 +20,7 @@ You can [read the full documentation on Godoc.org](http://godoc.org/github.com/f
 * Builtin logging framework
 * Compatible with `net/http` and Google App Engine
 
-## Design
+## Using Falcore
 
 Falcore is a filter pipeline based HTTP server library.  You can build arbitrarily complicated HTTP services by chaining just a few simple components:
 	
@@ -25,11 +29,11 @@ Falcore is a filter pipeline based HTTP server library.  You can build arbitrari
 * `Pipelines` form one of the two logic components.  A pipeline contains a list of `RequestFilters` and a list of `ResponseFilters`.  A request is processed through the request filters, in order, until one returns a response.  It then passes the response through each of the response filters, in order.  A pipeline is a valid `RequestFilter`.
 * `Routers` allow you to conditionally follow different pipelines.  A router chooses from a set of pipelines.  A few basic routers are included, including routing by hostname or requested path.  You can implement your own router by implementing `falcore.Router`.  `Routers` are not `RequestFilters`, but they can be put into pipelines.
 
-## Usage
+See the `examples` directory for usage examples.
+
+## Getting falcore
 
 Install with `go get github.com/fitstar/falcore`.
-
-See the `examples` directory for usage examples.
 
 ## HTTPS
 
