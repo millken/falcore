@@ -28,16 +28,19 @@ You can [read the full documentation on Godoc.org](http://godoc.org/github.com/f
 * [Hot restart hooks](hot_restart.html) for zero-downtime deploys
 * [Builtin performance statistics](performance.html) framework
 * Builtin logging framework
-* Compatible with `net/http` and Google App Engine
+* [Compatible](compatibility.html) with `net/http` and Google App Engine
 
 ## Using Falcore
 
 Falcore is a filter pipeline based HTTP server library.  You can build arbitrarily complicated HTTP services by chaining just a few simple components:
 	
-* `RequestFilters` are the core component.  A request filter takes a request and returns a response or nil.  Request filters can modify the request as it passes through.
-* `ResponseFilters` can modify a response on its way out the door.  An example response filter, `compression_filter`, is included.  It applies `deflate` or `gzip` compression to the response if the request supplies the proper headers.
-* `Pipelines` form one of the two logic components.  A pipeline contains a list of `RequestFilters` and a list of `ResponseFilters`.  A request is processed through the request filters, in order, until one returns a response.  It then passes the response through each of the response filters, in order.  A pipeline is a valid `RequestFilter`.
-* `Routers` allow you to conditionally follow different pipelines.  A router chooses from a set of pipelines.  A few basic routers are included, including routing by hostname or requested path.  You can implement your own router by implementing `falcore.Router`.  `Routers` are not `RequestFilters`, but they can be put into pipelines.
+`RequestFilters` are the core component.  A request filter takes a request and returns a response or nil.  Request filters can modify the request as it passes through.
+
+`ResponseFilters` can modify a response on its way out the door.  An example response filter, `compression_filter`, is included.  It applies `deflate` or `gzip` compression to the response if the request supplies the proper headers.
+
+`Pipelines` form one of the two logic components.  A pipeline contains a list of `RequestFilters` and a list of `ResponseFilters`.  A request is processed through the request filters, in order, until one returns a response.  It then passes the response through each of the response filters, in order.  A pipeline is a valid `RequestFilter`.
+
+`Routers` allow you to conditionally follow different pipelines.  A router chooses from a set of pipelines.  A few basic routers are included, including routing by hostname or requested path.  You can implement your own router by implementing `falcore.Router`.  `Routers` are not `RequestFilters`, but they can be put into pipelines.
 
 See the `examples` directory for usage examples.
 

@@ -3,6 +3,8 @@ layout: default
 title: Measuring Falcore Performance
 ---
 
+### Measuring performance
+
 The pipeline tracks performance timing on every stage in the pipeline and exposes that information in a final callback stage after the request/response has been completed.  This allows fine grained tracking of performance of requests as they traverse the pipeline including the IO read and write timings.  This information may be ignored or captured via the callback to do with as you please.
 
 Here’s a simple working example of a Falcore server that illustrates some of the features.
@@ -56,6 +58,8 @@ func (f helloFilter) FilterRequest(req *falcore.Request) *http.Response {
         return falcore.StringResponse(req.HttpRequest, 200, nil, "hello world!\n")
 }
 ```
+
+### Built-in Trace Output
 
 First, the pipeline is created and two trivial filter stages are added.  Then we add the request done callback. Finally, we create and start the server.  Using any HTTP client, we can make a few requests and see the output:
 
