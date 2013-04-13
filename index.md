@@ -12,7 +12,7 @@ You can [read the full documentation on Godoc.org](http://godoc.org/github.com/f
 
 * Modular and flexible design
 * [Hot restart hooks](hot_restart.html) for zero-downtime deploys
-* Builtin statistics framework
+* [Builtin performance statistics](performance.html) framework
 * Builtin logging framework
 * Compatible with `net/http` and Google App Engine
 

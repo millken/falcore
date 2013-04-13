@@ -3,6 +3,8 @@ layout: default
 title: Measuring Falcore Performance
 ---
 
+One typical challenge encountered when running an application in a production environment is measuring performance of the various components.  It's generally very helpful to be able to see how your application is performing and it's critical to be able to track down the source of a performance issue.  Falcore will automatically track the performance breakdown of each request by pipeline stage.  It's easy to add your own, more granlar timings.  When each request completes, including being written out to the socket, you can review, log, or otherwise work with your performance data.
+
 Here’s a simple working example of a Falcore server that illustrates some of the features.
 
 ```go
@@ -24,9 +26,14 @@ func main() {
         pipeline.Upstream.PushBack(filter2)
         // add request done callback stage
         pipeline.RequestDoneCallback = reqCB
-    
+
         // create server on port 8000
         server := falcore.NewServer(8000, pipeline)
+		
+		server.CompletionCallback = func(req *falcore.Request, res *http.Response ) {
+			req.Trace(res)
+		}
+		
         // start the server
         // this is normally blocking forever unless you send lifecycle commands
         if err := server.ListenAndServe(); err != nil {
@@ -46,23 +53,19 @@ func (f delayFilter) FilterRequest(req *falcore.Request) *http.Response {
 // Example filter that returns a Response
 type helloFilter int
 func (f helloFilter) FilterRequest(req *falcore.Request) *http.Response {
-        return falcore.SimpleResponse(req.HttpRequest, 200, nil, "hello world!\n")
+        return falcore.StringResponse(req.HttpRequest, 200, nil, "hello world!\n")
 }
-var reqCB = falcore.NewRequestFilter(func(req *falcore.Request) *http.Response {
-        req.Trace()         // Prints detailed stats about the request to the log
-        return nil
-})
 ```
 
 First, the pipeline is created and two trivial filter stages are added.  Then we add the request done callback. Finally, we create and start the server.  Using any HTTP client, we can make a few requests and see the output:
 
-	2012/01/27 13:25:55 [TRAC] 81439859c8 [GET] localhost:8000/ Sig=2E23AE3C Tot=0.0003
+	2012/01/27 13:25:55 [TRAC] 81439859c8 [GET] localhost:8000/ S=200 Sig=2E23AE3C Tot=0.0003
 	2012/01/27 13:25:55 [TRAC] 81439859c8 server.Init                    S=0 Tot=0.0002 %=65.70
 	2012/01/27 13:25:55 [TRAC] 81439859c8 main.delayFilter               S=1 Tot=0.0000 %=0.97
 	2012/01/27 13:25:55 [TRAC] 81439859c8 main.helloFilter               S=0 Tot=0.0000 %=3.56
 	2012/01/27 13:25:55 [TRAC] 81439859c8 server.ResponseWrite           S=0 Tot=0.0001 %=24.60
 	2012/01/27 13:25:55 [TRAC] 81439859c8 Overhead                       S=0 Tot=0.0000 %=5.18
-	2012/01/27 13:25:56 [TRAC] 8181861943 [GET] localhost:8000/ Sig=2E23AE3C Tot=0.0002
+	2012/01/27 13:25:56 [TRAC] 8181861943 [GET] localhost:8000/ S=Sig=2E23AE3C Tot=0.0002
 	2012/01/27 13:25:56 [TRAC] 8181861943 server.Init                    S=0 Tot=0.0001 %=49.11
 	2012/01/27 13:25:56 [TRAC] 8181861943 main.delayFilter               S=1 Tot=0.0000 %=1.18
 	2012/01/27 13:25:56 [TRAC] 8181861943 main.helloFilter               S=0 Tot=0.0000 %=1.78
