@@ -20,18 +20,19 @@ import (
 )
 
 type Server struct {
-	Addr               string
-	Pipeline           *Pipeline
-	CompletionCallback RequestCompletionCallback
-	listener           net.Listener
-	listenerFile       *os.File
-	stopAccepting      chan int
-	handlerWaitGroup   *sync.WaitGroup
-	logPrefix          string
-	AcceptReady        chan int
-	bufferPool         *BufferPool
-	writeBufferPool    *WriteBufferPool
-	PanicHandler       func(conn net.Conn, err interface{})
+	Addr                string
+	Pipeline            *Pipeline
+	CompletionCallback  RequestCompletionCallback
+	listener            net.Listener
+	listenerFile        *os.File
+	stopAccepting       chan struct{}
+	handlerWaitGroup    *sync.WaitGroup
+	logPrefix           string
+	AcceptReady         <-chan struct{}
+	closableAcceptReady chan struct{}
+	bufferPool          *BufferPool
+	writeBufferPool     *WriteBufferPool
+	PanicHandler        func(conn net.Conn, err interface{})
 }
 
 type RequestCompletionCallback func(req *Request, res *http.Response)
@@ -40,8 +41,9 @@ func NewServer(port int, pipeline *Pipeline) *Server {
 	s := new(Server)
 	s.Addr = fmt.Sprintf(":%v", port)
 	s.Pipeline = pipeline
-	s.stopAccepting = make(chan int)
-	s.AcceptReady = make(chan int, 1)
+	s.stopAccepting = make(chan struct{})
+	s.closableAcceptReady = make(chan struct{})
+	s.AcceptReady = s.closableAcceptReady
 	s.handlerWaitGroup = new(sync.WaitGroup)
 	s.logPrefix = fmt.Sprintf("%d", syscall.Getpid())
 
@@ -140,22 +142,29 @@ func (srv *Server) Port() int {
 	return 0
 }
 
-func (srv *Server) serve() (e error) {
-	var accept = true
-	srv.AcceptReady <- 1
-	for accept {
+func (srv *Server) serve() error {
+	close(srv.closableAcceptReady)
+
+	defer func() {
+		Trace("Stopped accepting, waiting for handlers")
+		// wait for handlers
+		srv.handlerWaitGroup.Wait()
+	}()
+
+	for {
 		var c net.Conn
+		var err error
 		if l, ok := srv.listener.(*net.TCPListener); ok {
 			l.SetDeadline(time.Now().Add(3 * time.Second))
 		}
-		c, e = srv.listener.Accept()
-		if e != nil {
-			if ope, ok := e.(*net.OpError); ok {
+		c, err = srv.listener.Accept()
+		if err != nil {
+			if ope, ok := err.(*net.OpError); ok {
 				if !(ope.Timeout() && ope.Temporary()) {
 					Error("%s SERVER Accept Error: %v", srv.serverLogPrefix(), ope)
 				}
 			} else {
-				Error("%s SERVER Accept Error: %v", srv.serverLogPrefix(), e)
+				Error("%s SERVER Accept Error: %v", srv.serverLogPrefix(), err)
 			}
 		} else {
 			//Trace("Handling!")
@@ -164,17 +173,14 @@ func (srv *Server) serve() (e error) {
 		}
 		select {
 		case <-srv.stopAccepting:
-			accept = false
+			return nil
 		default:
 		}
 	}
-	Trace("Stopped accepting, waiting for handlers")
-	// wait for handlers
-	srv.handlerWaitGroup.Wait()
 	return nil
 }
 
-func (srv *Server) sentinel(c net.Conn, connClosed chan int) {
+func (srv *Server) sentinel(c net.Conn, connClosed chan struct{}) {
 	select {
 	case <-srv.stopAccepting:
 		c.SetReadDeadline(time.Now().Add(3 * time.Second))
@@ -218,7 +224,7 @@ func (srv *Server) handler(c net.Conn) {
 	defer srv.bufferPool.Give(bpe)
 	wbpe := srv.writeBufferPool.Take(c)
 	defer srv.writeBufferPool.Give(wbpe)
-	var closeSentinelChan = make(chan int)
+	closeSentinelChan := make(chan struct{})
 	go srv.sentinel(c, closeSentinelChan)
 	defer srv.connectionFinished(c, closeSentinelChan)
 	var err error
@@ -362,12 +368,13 @@ func (srv *Server) requestFinished(request *Request, res *http.Response) {
 	}
 }
 
-func (srv *Server) connectionFinished(c net.Conn, closeChan chan int) {
+func (srv *Server) connectionFinished(c net.Conn, closeChan chan struct{}) {
 	if srv.PanicHandler != nil {
 		if err := recover(); err != nil {
 			srv.PanicHandler(c, err)
 		}
 	}
+
 	c.Close()
 	close(closeChan)
 	srv.handlerWaitGroup.Done()
