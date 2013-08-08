@@ -9,5 +9,5 @@ import (
 func RedirectResponse(req *http.Request, url string) *http.Response {
 	h := make(http.Header)
 	h.Set("Location", url)
-	return SimpleResponse(req, 302, h, 0, nil)
+	return falcore.SimpleResponse(req, 302, h, 0, nil)
 }

@@ -25,24 +25,3 @@ func JSONResponse(req *http.Request, status int, headers http.Header, body inter
 
 	return falcore.SimpleResponse(req, status, headers, int64(buf.Len()), buf), nil
 }
-
-// Streaming version of JSONResponse.  JSON encoding is unbuffered and transfer-encoding will be chunked.
-// Errors encountered during encoding will be logged, but are not returned
-func StreamingJSONResponse(req *http.Request, status int, headers http.Header, body interface{}) *http.Response {
-	if headers == nil {
-		headers = make(http.Header)
-	}
-	if headers.Get("Content-Type") == "" {
-		headers.Set("Content-Type", "application/json")
-	}
-
-	pW, res := falcore.PipeResponse(req, status, headers)
-	go func() {
-		if err := json.NewEncoder(pW).Encode(body); err != nil {
-			Error("Error encoding JSON: %v", err)
-		}
-		pW.Close()
-	}()
-
-	return res
-}
