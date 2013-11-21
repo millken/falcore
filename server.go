@@ -7,6 +7,7 @@ import (
 	"crypto/tls"
 	"errors"
 	"fmt"
+	"github.com/gorilla/websocket"
 	"io"
 	"io/ioutil"
 	"net"
@@ -23,6 +24,8 @@ type Server struct {
 	Addr                string
 	Pipeline            *Pipeline
 	CompletionCallback  RequestCompletionCallback
+	WebsocketUpgrade    func(req *Request, responseHeader http.Header) *http.Response
+	WebsocketHandler    func(req *Request, ws *websocket.Conn)
 	listener            net.Listener
 	listenerFile        *os.File
 	stopAccepting       chan struct{}
@@ -37,6 +40,9 @@ type Server struct {
 
 type RequestCompletionCallback func(req *Request, res *http.Response)
 
+var ReadBufferSize int = 8192
+var WriteBufferSize int = 4096
+
 func NewServer(port int, pipeline *Pipeline) *Server {
 	s := new(Server)
 	s.Addr = fmt.Sprintf(":%v", port)
@@ -48,8 +54,8 @@ func NewServer(port int, pipeline *Pipeline) *Server {
 	s.logPrefix = fmt.Sprintf("%d", syscall.Getpid())
 
 	// buffer pool for reusing connection bufio.Readers
-	s.bufferPool = NewBufferPool(100, 8192)
-	s.writeBufferPool = NewWriteBufferPool(100, 4096)
+	s.bufferPool = NewBufferPool(100, ReadBufferSize)
+	s.writeBufferPool = NewWriteBufferPool(100, WriteBufferSize)
 
 	return s
 }
@@ -245,31 +251,60 @@ func (srv *Server) handler(c net.Conn) {
 				keepAlive = false
 			}
 			request := newRequest(req, c, startTime)
-			reqCount++
-
-			pssInit := new(PipelineStageStat)
-			pssInit.Name = "server.Init"
-			pssInit.StartTime = startTime
-			pssInit.EndTime = time.Now()
-			pssInit.Type = PipelineStageTypeOverhead
-			request.appendPipelineStage(pssInit)
-
-			// execute the pipeline
-			var res = srv.handlerExecutePipeline(request, keepAlive)
-
-			// shutting down?
-			select {
-			case <-srv.stopAccepting:
+			if strings.ToLower(req.Header.Get("Connection")) == "upgrade" && strings.ToLower(req.Header.Get("Upgrade")) == "websocket" {
+				// websocket
+				// check if this server instance supports it
+				if srv.WebsocketHandler == nil {
+					Warn("Unsupported websocket upgrade ignored")
+					res := StringResponse(request.HttpRequest, 501, nil, "Websockets not supported")
+					srv.handlerWriteResponse(request, res, c, wbpe.Br)
+					return
+				}
+				headers := make(http.Header)
+				if srv.WebsocketUpgrade != nil {
+					res := srv.WebsocketUpgrade(request, headers)
+					if res != nil {
+						srv.handlerWriteResponse(request, res, c, wbpe.Br)
+					}
+				}
+				fake := &websocketFakeResponseWriterHijacker{c, bufio.NewReadWriter(bpe.Br, wbpe.Br)}
+				wsConn, err := websocket.Upgrade(fake, req, headers, ReadBufferSize, WriteBufferSize)
 				keepAlive = false
-				res.Close = true
-			default:
-			}
+				if err != nil {
+					Error("Failed upgrading websocket: %v\n", err)
+					res := StringResponse(request.HttpRequest, 500, nil, "Error upgrading connection")
+					srv.handlerWriteResponse(request, res, c, wbpe.Br)
+					return
+				}
+				srv.WebsocketHandler(request, wsConn)
+			} else {
+				// regular http request
+				reqCount++
 
-			// write response
-			srv.handlerWriteResponse(request, res, c, wbpe.Br)
+				pssInit := new(PipelineStageStat)
+				pssInit.Name = "server.Init"
+				pssInit.StartTime = startTime
+				pssInit.EndTime = time.Now()
+				pssInit.Type = PipelineStageTypeOverhead
+				request.appendPipelineStage(pssInit)
 
-			if res.Close {
-				keepAlive = false
+				// execute the pipeline
+				var res = srv.handlerExecutePipeline(request, keepAlive)
+
+				// shutting down?
+				select {
+				case <-srv.stopAccepting:
+					keepAlive = false
+					res.Close = true
+				default:
+				}
+
+				// write response
+				srv.handlerWriteResponse(request, res, c, wbpe.Br)
+
+				if res.Close {
+					keepAlive = false
+				}
 			}
 		} else {
 			// EOF is socket closed
@@ -384,3 +419,17 @@ type lengthFixReadCloser struct {
 	io.Reader
 	io.Closer
 }
+
+type websocketFakeResponseWriterHijacker struct {
+	conn net.Conn
+	bufs *bufio.ReadWriter
+}
+
+func (wh *websocketFakeResponseWriterHijacker) Hijack() (net.Conn, *bufio.ReadWriter, error) {
+	return wh.conn, wh.bufs, nil
+}
+
+// ResponseWriter faked
+func (wh *websocketFakeResponseWriterHijacker) Header() http.Header       { return nil }
+func (wh *websocketFakeResponseWriterHijacker) Write([]byte) (int, error) { return 0, nil }
+func (wh *websocketFakeResponseWriterHijacker) WriteHeader(int)           {}
