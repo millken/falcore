@@ -10,7 +10,7 @@ Falcore's architecture consists of an upstream pipeline where stages are run in 
 
 An example request might encounter several filters while traversing a pipeline:
 
-* A authorization filter that performas application specific auth, then either responds with an error or appends auth info to the request's context
+* A authorization filter that performs application specific auth, then either responds with an error or appends auth info to the request's context
 * A router that looks at the request and chooses one of several filters to handle
 * A filter that evaluates cache headers to see the if the response can be served from a local cache
 * A filter that peforms the core functionality of the application, such as rendering a JSON dictionary for an API call
