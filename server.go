@@ -266,7 +266,10 @@ func (srv *Server) handler(c net.Conn) {
 			}
 
 			// write response
-			srv.handlerWriteResponse(request, res, c, wbpe.Br)
+			err = srv.handlerWriteResponse(request, res, c, wbpe.Br)
+			if err != nil {
+				Error("%s ERROR writing response: <%T %v>", srv.serverLogPrefix(), err, err)
+			}
 
 			if res.Close {
 				keepAlive = false
@@ -336,17 +339,18 @@ func (srv *Server) handlerExecutePipeline(request *Request, keepAlive bool) *htt
 	return res
 }
 
-func (srv *Server) handlerWriteResponse(request *Request, res *http.Response, c net.Conn, bw *bufio.Writer) {
+func (srv *Server) handlerWriteResponse(request *Request, res *http.Response, c net.Conn, bw *bufio.Writer) error {
 	request.startPipelineStage("server.ResponseWrite")
 	request.CurrentStage.Type = PipelineStageTypeOverhead
 
+	var err error = nil
 	var nodelay = srv.setNoDelay(c, false)
 	if nodelay {
-		res.Write(bw)
+		err = res.Write(bw)
 		bw.Flush()
 		srv.setNoDelay(c, true)
 	} else {
-		res.Write(bw)
+		err = res.Write(bw)
 		bw.Flush()
 	}
 	if res.Body != nil {
@@ -355,6 +359,7 @@ func (srv *Server) handlerWriteResponse(request *Request, res *http.Response, c 
 	request.finishPipelineStage()
 	request.finishRequest()
 	srv.requestFinished(request, res)
+	return err
 }
 
 func (srv *Server) serverLogPrefix() string {
