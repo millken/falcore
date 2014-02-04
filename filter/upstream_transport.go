@@ -125,7 +125,6 @@ func (cw *timeoutConnWrapper) Read(b []byte) (n int, err error) {
 	}
 	return cw.conn.Read(b)
 }
-func (cw *timeoutConnWrapper) Read(b []byte) (n int, err error)   { return cw.conn.Read(b) }
 func (cw *timeoutConnWrapper) Close() error                       { return cw.conn.Close() }
 func (cw *timeoutConnWrapper) LocalAddr() net.Addr                { return cw.conn.LocalAddr() }
 func (cw *timeoutConnWrapper) RemoteAddr() net.Addr               { return cw.conn.RemoteAddr() }
