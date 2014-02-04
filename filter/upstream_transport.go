@@ -60,7 +60,7 @@ func (t *UpstreamTransport) dial(n, a string) (c net.Conn, err error) {
 	// FIXME: Go1 has a race that causes problems with timeouts
 	// Recommend disabling until Go1.1
 	if t.timeout > 0 {
-		c = &timeoutConnWrapper{conn: ctcp, timeout: t.timeout}
+		c = &timeoutConnWrapper{Conn: ctcp, timeout: t.timeout}
 	} else {
 		c = ctcp
 	}
@@ -104,30 +104,24 @@ func (t *UpstreamTransport) lookupIp() (addr *net.TCPAddr, err error) {
 }
 
 type timeoutConnWrapper struct {
-	conn    net.Conn
+	net.Conn
 	timeout time.Duration
 }
 
 func (cw *timeoutConnWrapper) setDeadline() error {
-	return cw.conn.SetDeadline(time.Now().Add(cw.timeout))
+	return cw.Conn.SetDeadline(time.Now().Add(cw.timeout))
 }
 
 func (cw *timeoutConnWrapper) Write(b []byte) (int, error) {
 	if err := cw.setDeadline(); err != nil {
 		return 0, err
 	}
-	return cw.conn.Write(b)
+	return cw.Conn.Write(b)
 }
 
 func (cw *timeoutConnWrapper) Read(b []byte) (n int, err error) {
 	if err := cw.setDeadline(); err != nil {
 		return 0, err
 	}
-	return cw.conn.Read(b)
+	return cw.Conn.Read(b)
 }
-func (cw *timeoutConnWrapper) Close() error                       { return cw.conn.Close() }
-func (cw *timeoutConnWrapper) LocalAddr() net.Addr                { return cw.conn.LocalAddr() }
-func (cw *timeoutConnWrapper) RemoteAddr() net.Addr               { return cw.conn.RemoteAddr() }
-func (cw *timeoutConnWrapper) SetDeadline(t time.Time) error      { return cw.conn.SetDeadline(t) }
-func (cw *timeoutConnWrapper) SetReadDeadline(t time.Time) error  { return cw.conn.SetReadDeadline(t) }
-func (cw *timeoutConnWrapper) SetWriteDeadline(t time.Time) error { return cw.conn.SetWriteDeadline(t) }
