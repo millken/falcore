@@ -35,7 +35,7 @@ func TestUpstreamThrottle(t *testing.T) {
 
 		for j := 0; j < 10; j++ {
 			go func() {
-				req, _ := http.NewRequest("GET", "/", nil)
+				req, _ := http.NewRequest("GET", "http://localhost/", nil)
 				_, res := falcore.TestWithRequest(req, up, nil)
 				resCh <- res
 				// fmt.Println("OK")
