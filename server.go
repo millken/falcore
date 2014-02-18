@@ -251,7 +251,14 @@ func (srv *Server) handler(c net.Conn) {
 				keepAlive = false
 			}
 			request := newRequest(req, c, startTime)
-			if strings.ToLower(req.Header.Get("Connection")) == "upgrade" && strings.ToLower(req.Header.Get("Upgrade")) == "websocket" {
+			upgrade := false
+			if req.Header["Connection"] != nil {
+				for _, value := range req.Header["Connection"] {
+					// Looks like the request parser doesn't split comma separated headers
+					upgrade = upgrade || strings.Contains(strings.ToLower(value),"upgrade")
+				}
+			}
+			if upgrade && strings.ToLower(req.Header.Get("Upgrade")) == "websocket" {
 				// websocket
 				// check if this server instance supports it
 				if srv.WebsocketHandler == nil {
