@@ -64,7 +64,7 @@ Falcore is currently targeted at Go 1.0.  If you're still using Go r.60.x, you c
 
 ## Contributing
 
-[**Thank you to our many contributors!**](https://github.com/fitstar/falcore/graphs/contributors)
+### [Thank you to our many contributors!](https://github.com/fitstar/falcore/graphs/contributors)
 
 If you would like to help out, just send a [pull request](https://github.com/fitstar/falcore/pulls).  Patches are far more likely to be accepted if they include tests, but don't be shy about opening a pull request to get a conversation going.  If you would like to discuss your idea before spending a bunch of time on it, [open an issue](https://github.com/fitstar/falcore/issues).
 
