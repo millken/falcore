@@ -7,6 +7,7 @@ import (
 	"crypto/tls"
 	"errors"
 	"fmt"
+	"github.com/fitstar/falcore/utils"
 	"io"
 	"io/ioutil"
 	"net"
@@ -30,8 +31,8 @@ type Server struct {
 	logPrefix           string
 	AcceptReady         <-chan struct{}
 	closableAcceptReady chan struct{}
-	bufferPool          *BufferPool
-	writeBufferPool     *WriteBufferPool
+	bufferPool          *utils.BufferPool
+	writeBufferPool     *utils.WriteBufferPool
 	PanicHandler        func(conn net.Conn, err interface{})
 }
 
@@ -48,8 +49,8 @@ func NewServer(port int, pipeline *Pipeline) *Server {
 	s.logPrefix = fmt.Sprintf("%d", syscall.Getpid())
 
 	// buffer pool for reusing connection bufio.Readers
-	s.bufferPool = NewBufferPool(100, 8192)
-	s.writeBufferPool = NewWriteBufferPool(100, 4096)
+	s.bufferPool = utils.NewBufferPool(100, 8192)
+	s.writeBufferPool = utils.NewWriteBufferPool(100, 4096)
 
 	return s
 }
