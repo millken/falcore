@@ -3,6 +3,7 @@ package falcore
 import (
 	"bytes"
 	"errors"
+	"github.com/fitstar/falcore/utils"
 	"net"
 	"net/http"
 	"strings"
@@ -112,7 +113,7 @@ func (c *ResponseConnectionTest) Write(p []byte) (int, error) {
 }
 
 // Setup the correct data for the given test
-func setupTestData(errorReturned string) (*Server, *Request, *http.Response, net.Conn, *ResponseConnectionTest, *WriteBufferPoolEntry) {
+func setupTestData(errorReturned string) (*Server, *Request, *http.Response, net.Conn, *ResponseConnectionTest, *utils.WriteBufferPoolEntry) {
 	pipeline := NewPipeline()
 	srv := NewServer(0, pipeline)
 	connectionResponse := ResponseConnectionTest{}

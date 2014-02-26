@@ -2,7 +2,6 @@ package falcore
 
 import (
 	"container/list"
-	"log"
 	"net/http"
 	"reflect"
 )
@@ -57,7 +56,7 @@ func (p *Pipeline) execute(req *Request) (res *http.Response) {
 				break
 			}
 		default:
-			log.Printf("%v (%T) is not a RequestFilter\n", e.Value, e.Value)
+			Error("%v (%T) is not a RequestFilter\n", e.Value, e.Value)
 			break
 		}
 	}

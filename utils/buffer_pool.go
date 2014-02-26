@@ -1,4 +1,4 @@
-package falcore
+package utils
 
 import (
 	"bufio"

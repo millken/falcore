@@ -3,6 +3,7 @@ package filter
 import (
 	"bytes"
 	"github.com/fitstar/falcore"
+	"github.com/fitstar/falcore/utils"
 	"io"
 	"net/http"
 	"strings"
@@ -13,16 +14,16 @@ import (
 
 type StringBody struct {
 	BodyBuffer *bytes.Reader
-	bpe        *falcore.BufferPoolEntry
+	bpe        *utils.BufferPoolEntry
 }
 
 type StringBodyFilter struct {
-	pool *falcore.BufferPool
+	pool *utils.BufferPool
 }
 
 func NewStringBodyFilter() *StringBodyFilter {
 	sbf := &StringBodyFilter{}
-	sbf.pool = falcore.NewBufferPool(100, 1024)
+	sbf.pool = utils.NewBufferPool(100, 1024)
 	return sbf
 }
 func (sbf *StringBodyFilter) FilterRequest(request *falcore.Request) *http.Response {
