@@ -40,7 +40,7 @@ func StringResponse(req *http.Request, status int, headers http.Header, body str
 
 // Returns the write half of an io.Pipe.  The read half will be the Body of the response.
 // Use this to stream a generated body without buffering first.  Don't forget to close the writer when finished.
-// Writes are blocking until something Reads.  Best to use a separate goroutine for writing.
+// Writes are blocking until something Reads so you must use a separate goroutine for writing.
 // Response will be Transfer-Encoding: chunked.
 func PipeResponse(req *http.Request, status int, headers http.Header) (io.WriteCloser, *http.Response) {
 	pR, pW := io.Pipe()
