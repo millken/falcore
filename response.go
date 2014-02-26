@@ -2,7 +2,6 @@ package falcore
 
 import (
 	"bytes"
-	"encoding/json"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -39,28 +38,11 @@ func StringResponse(req *http.Request, status int, headers http.Header, body str
 	return SimpleResponse(req, status, headers, int64(len(body)), strings.NewReader(body))
 }
 
-// A 302 redirect response
-func RedirectResponse(req *http.Request, url string) *http.Response {
-	h := make(http.Header)
-	h.Set("Location", url)
-	return SimpleResponse(req, 302, h, 0, nil)
-}
-
-// Generate an http.Response by json encoding body using
-// the standard library's json.Encoder.  error will be nil
-// unless json encoding fails.
-func JSONResponse(req *http.Request, status int, headers http.Header, body interface{}) (*http.Response, error) {
-	buf := new(bytes.Buffer)
-	if err := json.NewEncoder(buf).Encode(body); err != nil {
-		return nil, err
-	}
-
-	if headers == nil {
-		headers = make(http.Header)
-	}
-	if headers.Get("Content-Type") == "" {
-		headers.Set("Content-Type", "application/json")
-	}
-
-	return SimpleResponse(req, status, headers, int64(buf.Len()), buf), nil
+// Returns the write half of an io.Pipe.  The read half will be the Body of the response.
+// Use this to stream a generated body without buffering first.  Don't forget to close the writer when finished.
+// Writes are blocking until something Reads.  Best to use a separate goroutine for writing.
+// Response will be Transfer-Encoding: chunked.
+func PipeResponse(req *http.Request, status int, headers http.Header) (io.WriteCloser, *http.Response) {
+	pR, pW := io.Pipe()
+	return pW, SimpleResponse(req, status, headers, -1, pR)
 }
