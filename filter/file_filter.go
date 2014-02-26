@@ -16,6 +16,8 @@ type FileFilter struct {
 	BasePath string
 	// Prefix in URL path
 	PathPrefix string
+	// File to look for if path is a directory
+	DirectoryIndex string
 }
 
 func (f *FileFilter) FilterRequest(req *falcore.Request) (res *http.Response) {
@@ -41,6 +43,16 @@ func (f *FileFilter) FilterRequest(req *falcore.Request) (res *http.Response) {
 
 	// Open File
 	if file, err := os.Open(asset_path); err == nil {
+		// If it's a directory, try opening the directory index
+		if stat, err := file.Stat(); f.DirectoryIndex != "" && err == nil && stat.Mode()&os.ModeDir > 0 {
+			file.Close()
+
+			asset_path = filepath.Join(asset_path, f.DirectoryIndex)
+			if file, err = os.Open(asset_path); err != nil {
+				return
+			}
+		}
+
 		// Make sure it's an actual file
 		if stat, err := file.Stat(); err == nil && stat.Mode()&os.ModeType == 0 {
 			res = &http.Response{

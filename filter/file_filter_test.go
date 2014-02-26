@@ -25,14 +25,16 @@ func init() {
 	mime.AddExtensionType(".json", "application/json")
 	mime.AddExtensionType(".txt", "text/plain")
 	mime.AddExtensionType(".png", "image/png")
+	mime.AddExtensionType(".html", "text/html")
 
 	go func() {
 
 		// falcore setup
 		pipeline := falcore.NewPipeline()
 		pipeline.Upstream.PushBack(&FileFilter{
-			PathPrefix: "/",
-			BasePath:   "../test/",
+			PathPrefix:     "/",
+			BasePath:       "../test/",
+			DirectoryIndex: "index.html",
 		})
 		srv = falcore.NewServer(0, pipeline)
 		if err := srv.ListenAndServe(); err != nil {
@@ -88,7 +90,6 @@ func TestFourOhFour(t *testing.T) {
 
 var basicTests = []struct {
 	name string
-	path string
 	mime string
 	data []byte
 	file string
@@ -97,37 +98,38 @@ var basicTests = []struct {
 	{
 		name: "small text file",
 		mime: "text/plain",
-		path: "fsbase_test/hello/world.txt",
 		data: []byte("Hello world!"),
 		url:  "/hello/world.txt",
 	},
 	{
 		name: "json file",
 		mime: "application/json",
-		path: "fsbase_test/foo.json",
 		file: "../test/foo.json",
 		url:  "/foo.json",
 	},
 	{
 		name: "png file",
 		mime: "image/png",
-		path: "fsbase_test/images/face.png",
 		file: "../test/images/face.png",
 		url:  "/images/face.png",
 	},
 	{
 		name: "relative paths",
 		mime: "application/json",
-		path: "fsbase_test/foo.json",
 		file: "../test/foo.json",
 		url:  "/images/../foo.json",
 	},
 	{
 		name: "custom mime type",
 		mime: "foo/bar",
-		path: "fsbase_test/custom_type.foo",
 		file: "../test/custom_type.foo",
 		url:  "/custom_type.foo",
+	},
+	{
+		name: "directory index",
+		mime: "text/html",
+		file: "../test/index.html",
+		url:  "/",
 	},
 }
 
