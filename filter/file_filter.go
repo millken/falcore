@@ -27,7 +27,6 @@ func (f *FileFilter) FilterRequest(req *falcore.Request) (res *http.Response) {
 		asset_path = asset_path[len(f.PathPrefix):]
 	} else {
 		// The requested path doesn't fall into the scope of paths that are supposed to be handled by this filter
-		falcore.Debug("%v doesn't match prefix %v", asset_path, f.PathPrefix)
 		return
 	}
 
