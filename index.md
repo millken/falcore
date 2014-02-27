@@ -54,7 +54,7 @@ To use falcore to serve HTTPS, simply call `ListenAndServeTLS` instead of `Liste
 
 ## Building
 
-Falcore is currently targeted at Go 1.1.
+Falcore is currently targeted at Go 1.1.  There are no dependencies outside the standard library.
 
 ## Maintainers
 
