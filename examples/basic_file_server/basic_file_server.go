@@ -5,7 +5,6 @@ import (
 	"fmt"
 	"github.com/fitstar/falcore"
 	"github.com/fitstar/falcore/filter"
-	"net/http"
 )
 
 // Command line options
@@ -23,16 +22,10 @@ func main() {
 
 	// upstream filters
 
-	// Serve index.html for root requests
-	pipeline.Upstream.PushBack(falcore.NewRequestFilter(func(req *falcore.Request) *http.Response {
-		if req.HttpRequest.URL.Path == "/" {
-			req.HttpRequest.URL.Path = "/index.html"
-		}
-		return nil
-	}))
 	// Serve files
 	pipeline.Upstream.PushBack(&filter.FileFilter{
-		BasePath: *path,
+		BasePath:       *path,
+		DirectoryIndex: "index.html", // Serve index.html for root requests
 	})
 
 	// downstream
