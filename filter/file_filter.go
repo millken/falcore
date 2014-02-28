@@ -10,7 +10,8 @@ import (
 )
 
 // A falcore RequestFilter for serving static files
-// from the filesystem.
+// from the filesystem.  This filter returns nil if the file
+// is not found or is outside of scope.
 type FileFilter struct {
 	// File system base path for serving files
 	BasePath string

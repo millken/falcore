@@ -5,7 +5,7 @@ import (
 	"net/http"
 )
 
-// falcore/etag.Filter is a falcore.ResponseFilter that matches
+// EtagFilter is a falcore.ResponseFilter that matches
 // the response's Etag header against the request's If-None-Match
 // header.  If they match, the filter will return a '304 Not Modifed'
 // status and no body.

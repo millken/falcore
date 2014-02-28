@@ -7,7 +7,8 @@ import (
 	"net/http"
 )
 
-// Implements a RequestFilter using a http.Handler to produce the response
+// Wraps an http.Handler in a falcore.RequestFilter.  This allows for compatibility
+// with existing handlers built for the standard library's http server.
 // This will always return a response due to the requirements of the http.Handler
 // interface so it should be placed at the end of the Upstream pipeline.
 type HandlerFilter struct {

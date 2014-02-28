@@ -11,12 +11,13 @@ import (
 
 // Keeps the body of a request in a string so it can be re-read at each stage of the pipeline
 // implements io.ReadCloser to match http.Request.Body
-
 type StringBody struct {
 	BodyBuffer *bytes.Reader
 	bpe        *utils.BufferPoolEntry
 }
 
+// Injests the body of the request into a buffer so it can be read more than
+// once.
 type StringBodyFilter struct {
 	pool *utils.BufferPool
 }

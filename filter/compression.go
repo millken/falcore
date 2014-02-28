@@ -10,12 +10,18 @@ import (
 	"github.com/fitstar/falcore"
 )
 
+// The default types to compress
 var DefaultTypes = []string{"text/plain", "text/html", "application/json", "text/xml"}
 
+// A ResponseFilter that performs compression
+// when compression is available and the content
+// isn't already compressed
 type CompressionFilter struct {
 	types []string
 }
 
+// types is the mime types to compress.  If none is specified,
+// DefaultTypes is used.
 func NewCompressionFilter(types []string) *CompressionFilter {
 	f := new(CompressionFilter)
 	if types != nil {

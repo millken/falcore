@@ -48,6 +48,7 @@ func (up UpstreamPool) Next() *UpstreamEntry {
 	return <-up.nextUpstream
 }
 
+// Logs the current status of the pool
 func (up UpstreamPool) LogStatus() {
 	weightsBuffer := make([]int, len(up.pool))
 	// loop and save the weights so we don't lock for logging

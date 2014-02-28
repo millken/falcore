@@ -10,6 +10,8 @@ import (
 	"github.com/fitstar/falcore"
 )
 
+// Holds all the information about how to lookup and
+// connect to an upstream.
 type UpstreamTransport struct {
 	DNSCacheDuration time.Duration
 

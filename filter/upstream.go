@@ -16,6 +16,8 @@ type passThruReadCloser struct {
 	io.Closer
 }
 
+// Proxies the request through another server.  Can be used in conjunction with
+// the UpstreamPool to load balance traffic across several servers.
 type Upstream struct {
 	// Name, if set, is used in logging and request stats
 	Name      string
@@ -131,6 +133,8 @@ func (u *Upstream) FilterRequest(request *falcore.Request) (res *http.Response) 
 	return
 }
 
+// Set the maximum number of concurrent requests to send to upstream
+// Set to 0 (the default) to disable throttling.
 func (u *Upstream) SetMaxConcurrent(max int64) {
 	u.throttleC.L.Lock()
 	u.throttleMax = max
@@ -138,6 +142,7 @@ func (u *Upstream) SetMaxConcurrent(max int64) {
 	u.throttleC.L.Unlock()
 }
 
+// Returns the current maxconcurrent
 func (u *Upstream) MaxConcurrent() int64 {
 	u.throttleC.L.Lock()
 	max := u.throttleMax
@@ -145,6 +150,7 @@ func (u *Upstream) MaxConcurrent() int64 {
 	return max
 }
 
+// Returns the number of requests waiting on throttling
 func (u *Upstream) QueueLength() int64 {
 	u.throttleC.L.Lock()
 	ql := u.throttleQueue
