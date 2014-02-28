@@ -6,8 +6,9 @@ import (
 	"time"
 )
 
-// I really want to use log4go... but i need to support falling back to standard (shitty) logger :(
-// I suggest using go-timber for the real logger
+// Interface for logging from within falcore.
+// You can use your own logger as long as it follows this
+// interface by calling SetLogger.
 type Logger interface {
 	// Matches the log4go interface
 	Finest(arg0 interface{}, args ...interface{})
@@ -22,6 +23,10 @@ type Logger interface {
 
 var logger Logger = NewStdLibLogger()
 
+// Set the packages static logger.  This logger is used by
+// falcore can its subpackages.  It is also available through
+// the standalone functions that match the logger interface.
+// The default is a StdLibLogger
 func SetLogger(newLogger Logger) {
 	logger = newLogger
 }
@@ -31,35 +36,50 @@ func TimeDiff(startTime time.Time, endTime time.Time) float32 {
 	return float32(endTime.Sub(startTime)) / float32(time.Second)
 }
 
-// Global Logging
+// Log using the packages default logger.  You can change the
+// underlying logger using SetLogger
 func Finest(arg0 interface{}, args ...interface{}) {
 	logger.Finest(arg0, args...)
 }
 
+// Log using the packages default logger.  You can change the
+// underlying logger using SetLogger
 func Fine(arg0 interface{}, args ...interface{}) {
 	logger.Fine(arg0, args...)
 }
 
+// Log using the packages default logger.  You can change the
+// underlying logger using SetLogger
 func Debug(arg0 interface{}, args ...interface{}) {
 	logger.Debug(arg0, args...)
 }
 
+// Log using the packages default logger.  You can change the
+// underlying logger using SetLogger
 func Trace(arg0 interface{}, args ...interface{}) {
 	logger.Trace(arg0, args...)
 }
 
+// Log using the packages default logger.  You can change the
+// underlying logger using SetLogger
 func Info(arg0 interface{}, args ...interface{}) {
 	logger.Info(arg0, args...)
 }
 
+// Log using the packages default logger.  You can change the
+// underlying logger using SetLogger
 func Warn(arg0 interface{}, args ...interface{}) error {
 	return logger.Warn(arg0, args...)
 }
 
+// Log using the packages default logger.  You can change the
+// underlying logger using SetLogger
 func Error(arg0 interface{}, args ...interface{}) error {
 	return logger.Error(arg0, args...)
 }
 
+// Log using the packages default logger.  You can change the
+// underlying logger using SetLogger
 func Critical(arg0 interface{}, args ...interface{}) error {
 	return logger.Critical(arg0, args...)
 }
@@ -78,6 +98,7 @@ func NewStdLibLogger() Logger {
 
 type level int
 
+// Log levels, in order of priority
 const (
 	FINEST level = iota
 	FINE

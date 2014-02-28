@@ -20,6 +20,8 @@ import (
 	"time"
 )
 
+// A falcore server.  This is the thing that actually does
+// the socket stuff and processes requests.
 type Server struct {
 	Addr                string
 	Pipeline            *Pipeline
@@ -36,6 +38,10 @@ type Server struct {
 	PanicHandler        func(conn net.Conn, err interface{})
 }
 
+// An optional callback called after each request is fully processed
+// and delivered to the client.  At this point, it's too late to
+// alter the response.  For that, use a ResponseFilter.
+// This is a great place to do things like logging/reporting.
 type RequestCompletionCallback func(req *Request, res *http.Response)
 
 func NewServer(port int, pipeline *Pipeline) *Server {
@@ -55,6 +61,8 @@ func NewServer(port int, pipeline *Pipeline) *Server {
 	return s
 }
 
+// Setup the server to listen using an existing file pointer.
+// If this is set, server will not open a new listening socket.
 func (srv *Server) FdListen(fd int) error {
 	var err error
 	srv.listenerFile = os.NewFile(uintptr(fd), "")
@@ -84,6 +92,8 @@ func (srv *Server) socketListen() error {
 	return srv.setupNonBlockingListener(err, l)
 }
 
+// Start the server.  This method blocks until the server
+// has stopped completely.
 func (srv *Server) ListenAndServe() error {
 	if srv.Addr == "" {
 		srv.Addr = ":http"
@@ -96,10 +106,12 @@ func (srv *Server) ListenAndServe() error {
 	return srv.serve()
 }
 
+// Get the file descriptor from the listening socket.
 func (srv *Server) SocketFd() int {
 	return int(srv.listenerFile.Fd())
 }
 
+// Start the server using TLS for serving HTTPS.
 func (srv *Server) ListenAndServeTLS(certFile, keyFile string) error {
 	if srv.Addr == "" {
 		srv.Addr = ":https"
@@ -128,10 +140,12 @@ func (srv *Server) ListenAndServeTLS(certFile, keyFile string) error {
 	return srv.serve()
 }
 
+// Gracefully shutdown the server.  Calling this more than once will result in a panic.
 func (srv *Server) StopAccepting() {
 	close(srv.stopAccepting)
 }
 
+// The port the server is listening on
 func (srv *Server) Port() int {
 	if l := srv.listener; l != nil {
 		a := l.Addr()

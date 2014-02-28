@@ -30,7 +30,7 @@ func NewPipeline() (l *Pipeline) {
 	return
 }
 
-// Pipelines are also RequestFilters... wacky eh?
+// Pipelines are valid RequestFilters.  This makes them nestable.
 func (p *Pipeline) FilterRequest(req *Request) *http.Response {
 	return p.execute(req)
 }

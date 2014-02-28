@@ -19,6 +19,10 @@ import (
 //
 // A pointer is kept to the originating Connection.
 //
+// Context is provided to allow for passing data between stages.
+// For example, you may have an authentication filter that sets
+// the auth information in Context for use at a later stage.
+//
 // There is a unique ID assigned to each request.  This ID is not
 // globally unique to keep it shorter for logging purposes.  It is
 // possible to have duplicates though very unlikely over the period
@@ -36,20 +40,19 @@ import (
 //
 // See falcore.PipelineStageStat docs for more info.
 //
-// The Signature is also a cool feature. See the
 type Request struct {
 	ID                 string
 	StartTime          time.Time
 	EndTime            time.Time
-	HttpRequest        *http.Request
-	connection         net.Conn
-	RemoteAddr         *net.TCPAddr
+	Overhead           time.Duration
 	PipelineStageStats *list.List
 	CurrentStage       *PipelineStageStat
+	connection         net.Conn
+	RemoteAddr         *net.TCPAddr
+	HttpRequest        *http.Request
+	Context            map[string]interface{}
 	pipelineHash       hash.Hash32
 	piplineTot         time.Duration
-	Overhead           time.Duration
-	Context            map[string]interface{}
 }
 
 // Used internally to create and initialize a new request.
@@ -127,10 +130,10 @@ func (fReq *Request) finishCommon() {
 	fReq.piplineTot += fReq.CurrentStage.EndTime.Sub(fReq.CurrentStage.StartTime)
 }
 
+// This gives a unique signature for each unique path through the pipeline.
 // The Signature will only be complete in the RequestDoneCallback.  At
 // any given time, the Signature is a crc32 sum of all the finished
 // pipeline stages combining PipelineStageStat.Name and PipelineStageStat.Status.
-// This gives a unique signature for each unique path through the pipeline.
 // To modify the signature for your own use, just set the
 // request.CurrentStage.Status in your RequestFilter or ResponseFilter.
 func (fReq *Request) Signature() string {
@@ -168,9 +171,9 @@ func (fReq *Request) finishRequest() {
 //
 //   type PipelineStatus byte
 //   const (
-// 	    Success PipelineStatus = iota	// General Run successfully
-//	    Skip								// Skipped (all or most of the work of this stage)
-//	    Fail								// General Fail
+// 	    Success PipelineStatus = iota   // General Run successfully
+//	    Skip                            // Skipped (all or most of the work of this stage)
+//	    Fail                            // General Fail
 //	    // All others may be used as custom status codes
 //   )
 type PipelineStageStat struct {
@@ -181,6 +184,8 @@ type PipelineStageStat struct {
 	EndTime   time.Time
 }
 
+// The type of pipeline stage for a stat object.  These are included
+// in the (*Request)Trace output.
 type PipelineStageType string
 
 const (

@@ -4,6 +4,7 @@ import (
 	"io"
 )
 
+// Implements support for 100-continue
 type continueReader struct {
 	req    *Request
 	r      io.ReadCloser

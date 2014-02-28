@@ -4,7 +4,7 @@ import (
 	"net/http"
 )
 
-// Filter incomming requests and optionally return a response or nil.
+// Filter incomming requests and return a response or nil.
 // Filters are chained together into a flow (the Pipeline) which will terminate
 // if the Filter returns a response.
 type RequestFilter interface {

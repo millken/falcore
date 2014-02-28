@@ -9,6 +9,7 @@ import (
 )
 
 // Generate an http.Response using the basic fields
+// Use -1 for the contentLength if you don't know the content length in advance.
 func SimpleResponse(req *http.Request, status int, headers http.Header, contentLength int64, body io.Reader) *http.Response {
 	res := new(http.Response)
 	res.StatusCode = status
@@ -28,17 +29,19 @@ func SimpleResponse(req *http.Request, status int, headers http.Header, contentL
 	return res
 }
 
-// Like SimpleResponse but uses a []byte for the body.
+// Generate an http.Response using a []byte for the body.
 func ByteResponse(req *http.Request, status int, headers http.Header, body []byte) *http.Response {
 	return SimpleResponse(req, status, headers, int64(len(body)), bytes.NewBuffer(body))
 }
 
-// Like StringResponse but uses a string for the body.
+// Generate an http.Response using a string for the body.
 func StringResponse(req *http.Request, status int, headers http.Header, body string) *http.Response {
 	return SimpleResponse(req, status, headers, int64(len(body)), strings.NewReader(body))
 }
 
-// Returns the write half of an io.Pipe.  The read half will be the Body of the response.
+// Generate an http.Response using the read half of an io.Pipe as the Body.
+// Returns the write half of an io.Pipe and the response.
+//
 // Use this to stream a generated body without buffering first.  Don't forget to close the writer when finished.
 // Writes are blocking until something Reads so you must use a separate goroutine for writing.
 // Response will be Transfer-Encoding: chunked.
