@@ -260,6 +260,8 @@ func (srv *Server) handler(c net.Conn) {
 				keepAlive = false
 			}
 			request := newRequest(req, c, startTime)
+			request.SetServerAddr(srv.listener.Addr().String())
+			Debug("remote: %s\n", request.RemoteAddr)
 			reqCount++
 
 			pssInit := new(PipelineStageStat)

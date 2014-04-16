@@ -49,6 +49,7 @@ type Request struct {
 	CurrentStage       *PipelineStageStat
 	connection         net.Conn
 	RemoteAddr         *net.TCPAddr
+	ServerAddr         string
 	HttpRequest        *http.Request
 	Context            map[string]interface{}
 	pipelineHash       hash.Hash32
@@ -83,6 +84,10 @@ func newRequest(request *http.Request, conn net.Conn, startTime time.Time) *Requ
 	}
 
 	return fReq
+}
+
+func (fReq *Request) SetServerAddr(addr string) {
+	fReq.ServerAddr = addr
 }
 
 // Returns a completed falcore.Request and response after running the single filter stage
