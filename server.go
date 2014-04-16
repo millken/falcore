@@ -44,9 +44,9 @@ type Server struct {
 // This is a great place to do things like logging/reporting.
 type RequestCompletionCallback func(req *Request, res *http.Response)
 
-func NewServer(port int, pipeline *Pipeline) *Server {
+func NewServer(addr string, pipeline *Pipeline) *Server {
 	s := new(Server)
-	s.Addr = fmt.Sprintf(":%v", port)
+	s.Addr = addr
 	s.Pipeline = pipeline
 	s.stopAccepting = make(chan struct{})
 	s.closableAcceptReady = make(chan struct{})
