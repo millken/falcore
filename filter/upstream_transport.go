@@ -6,7 +6,7 @@ import (
 	"net"
 	"net/http"
 	"time"
-
+	"crypto/tls"
 	"github.com/fitstar/falcore"
 )
 
@@ -36,7 +36,9 @@ func NewUpstreamTransport(host string, port int, timeout time.Duration, transpor
 	ut.DNSCacheDuration = 15 * time.Minute
 
 	if ut.transport == nil {
-		ut.transport = &http.Transport{}
+		ut.transport = &http.Transport{
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: true},
+		}		
 		ut.transport.MaxIdleConnsPerHost = 15
 	}
 

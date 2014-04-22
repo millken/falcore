@@ -36,6 +36,7 @@ type Server struct {
 	bufferPool          *utils.BufferPool
 	writeBufferPool     *utils.WriteBufferPool
 	PanicHandler        func(conn net.Conn, err interface{})
+	UseSSL				bool
 }
 
 
@@ -60,6 +61,7 @@ func NewServer(addr string, pipeline *Pipeline) *Server {
 	s.handlerWaitGroup = new(sync.WaitGroup)
 	s.logPrefix = fmt.Sprintf("%d", syscall.Getpid())
 
+	srv.UseSSL = false
 	// buffer pool for reusing connection bufio.Readers
 	s.bufferPool = utils.NewBufferPool(100, 8192)
 	s.writeBufferPool = utils.NewWriteBufferPool(100, 4096)
@@ -174,6 +176,7 @@ func (srv *Server) ListenAndServeTLSSNI(certs []Certificates) error {
 	}
 
 	srv.listener = tls.NewListener(srv.listener, config)
+	srv.UseSSL = true
 
 	return srv.serve()
 }
@@ -297,6 +300,11 @@ func (srv *Server) handler(c net.Conn) {
 			} else if strings.ToLower(req.Header.Get("Connection")) != "keep-alive" {
 				keepAlive = false
 			}
+			if srv.UseSSL == true {
+				req.URL.Scheme = "https"
+			}else{
+				req.URL.Scheme = "http"
+			}			
 			request := newRequest(req, c, startTime)
 			request.SetServerAddr(srv.listener.Addr().String())
 			Debug("remote: %s\n", request.RemoteAddr)
