@@ -37,6 +37,7 @@ type Server struct {
 	writeBufferPool     *utils.WriteBufferPool
 	PanicHandler        func(conn net.Conn, err interface{})
 	UseSSL				bool
+	ipConn				*utils.PerIpConnTracker
 }
 
 
@@ -61,11 +62,12 @@ func NewServer(addr string, pipeline *Pipeline) *Server {
 	s.handlerWaitGroup = new(sync.WaitGroup)
 	s.logPrefix = fmt.Sprintf("%d", syscall.Getpid())
 
-	srv.UseSSL = false
 	// buffer pool for reusing connection bufio.Readers
 	s.bufferPool = utils.NewBufferPool(100, 8192)
 	s.writeBufferPool = utils.NewWriteBufferPool(100, 4096)
-
+	s.UseSSL = false
+	s.ipConn = utils.CreatePerIpConnTracker()
+	
 	return s
 }
 
@@ -283,6 +285,16 @@ func (srv *Server) handler(c net.Conn) {
 	closeSentinelChan := make(chan struct{})
 	go srv.sentinel(c, closeSentinelChan)
 	defer srv.connectionFinished(c, closeSentinelChan)
+	
+	clientAddr := c.RemoteAddr().(*net.TCPAddr).IP.To4()
+	ipUint32 := utils.Ip4ToUint32(clientAddr)
+	if srv.ipConn.RegisterIp(ipUint32) > 20 {
+		Debug("Too many concurrent connections (more than %d) from ip=%s. Denying new connection from the ip\n%v\n", 20, clientAddr, srv.ipConn.GetIpConn())
+		srv.ipConn.UnregisterIp(ipUint32)
+		return
+	}
+	defer srv.ipConn.UnregisterIp(ipUint32)
+	
 	var err error
 	var req *http.Request
 	// no keepalive (for now)
