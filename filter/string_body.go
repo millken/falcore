@@ -2,8 +2,8 @@ package filter
 
 import (
 	"bytes"
-	"github.com/fitstar/falcore"
-	"github.com/fitstar/falcore/utils"
+	"github.com/millken/falcore"
+	"github.com/millken/falcore/utils"
 	"io"
 	"net/http"
 	"strings"

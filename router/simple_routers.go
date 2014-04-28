@@ -2,7 +2,7 @@ package router
 
 import (
 	"container/list"
-	"github.com/fitstar/falcore"
+	"github.com/millken/falcore"
 	"regexp"
 )
 

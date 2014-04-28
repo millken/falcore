@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"time"
 	"crypto/tls"
-	"github.com/fitstar/falcore"
+	"github.com/millken/falcore"
 )
 
 // Holds all the information about how to lookup and

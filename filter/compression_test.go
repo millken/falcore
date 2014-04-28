@@ -6,7 +6,7 @@ import (
 	"compress/flate"
 	"compress/gzip"
 	"fmt"
-	"github.com/fitstar/falcore"
+	"github.com/millken/falcore"
 	"io"
 	"io/ioutil"
 	"net"

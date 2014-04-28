@@ -7,7 +7,7 @@ import (
 	"net/http"
 	"strings"
 
-	"github.com/fitstar/falcore"
+	"github.com/millken/falcore"
 )
 
 // The default types to compress

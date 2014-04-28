@@ -2,7 +2,7 @@ package router
 
 import (
 	"bytes"
-	"github.com/fitstar/falcore"
+	"github.com/millken/falcore"
 	"net/http"
 	"regexp"
 	"testing"

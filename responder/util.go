@@ -1,7 +1,7 @@
 package responder
 
 import (
-	"github.com/fitstar/falcore"
+	"github.com/millken/falcore"
 	"net/http"
 )
 

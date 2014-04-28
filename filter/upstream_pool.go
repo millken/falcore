@@ -1,7 +1,7 @@
 package filter
 
 import (
-	"github.com/fitstar/falcore"
+	"github.com/millken/falcore"
 	"net/http"
 	"sync"
 	"time"

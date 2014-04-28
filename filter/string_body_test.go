@@ -2,7 +2,7 @@ package filter
 
 import (
 	"bytes"
-	"github.com/fitstar/falcore"
+	"github.com/millken/falcore"
 	"io/ioutil"
 	"net/http"
 	"testing"

@@ -4,7 +4,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/fitstar/falcore"
+	"github.com/millken/falcore"
 )
 
 // fixme: probably should use net.SplitHostPort

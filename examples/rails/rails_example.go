@@ -4,7 +4,7 @@
 // to proxying the request to a list of ports on localhost
 //
 // To test this simply:
-// 		cd $GOPATH/src/github.com/fitstar/falcore
+// 		cd $GOPATH/src/github.com/millken/falcore
 // 		mkdir bin
 // 		go build -o bin/hello ./examples/hello_world
 // 		go build -o bin/rails ./examples/rails
@@ -21,8 +21,8 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/fitstar/falcore"
-	"github.com/fitstar/falcore/filter"
+	"github.com/millken/falcore"
+	"github.com/millken/falcore/filter"
 	"regexp"
 	"strconv"
 )

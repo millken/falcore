@@ -3,7 +3,7 @@ package responder
 import (
 	"bytes"
 	"encoding/json"
-	"github.com/fitstar/falcore"
+	"github.com/millken/falcore"
 	"net/http"
 )
 

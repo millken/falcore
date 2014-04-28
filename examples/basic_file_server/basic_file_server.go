@@ -3,8 +3,8 @@ package main
 import (
 	"flag"
 	"fmt"
-	"github.com/fitstar/falcore"
-	"github.com/fitstar/falcore/filter"
+	"github.com/millken/falcore"
+	"github.com/millken/falcore/filter"
 )
 
 // Command line options
