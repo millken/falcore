@@ -36,7 +36,6 @@ type Server struct {
 	bufferPool          *utils.BufferPool
 	writeBufferPool     *utils.WriteBufferPool
 	PanicHandler        func(conn net.Conn, err interface{})
-	UseSSL				bool
 	ipConn				*utils.PerIpConnTracker
 }
 
@@ -65,7 +64,6 @@ func NewServer(addr string, pipeline *Pipeline) *Server {
 	// buffer pool for reusing connection bufio.Readers
 	s.bufferPool = utils.NewBufferPool(100, 8192)
 	s.writeBufferPool = utils.NewWriteBufferPool(100, 4096)
-	s.UseSSL = false
 	s.ipConn = utils.CreatePerIpConnTracker()
 	
 	return s
@@ -178,7 +176,6 @@ func (srv *Server) ListenAndServeTLSSNI(certs []Certificates) error {
 	}
 
 	srv.listener = tls.NewListener(srv.listener, config)
-	srv.UseSSL = true
 
 	return srv.serve()
 }
@@ -288,7 +285,7 @@ func (srv *Server) handler(c net.Conn) {
 	
 	clientAddr := c.RemoteAddr().(*net.TCPAddr).IP.To4()
 	ipUint32 := utils.Ip4ToUint32(clientAddr)
-	if srv.ipConn.RegisterIp(ipUint32) > 20 {
+	if srv.ipConn.RegisterIp(ipUint32) > 200 {
 		Debug("Too many concurrent connections (more than %d) from ip=%s. Denying new connection from the ip\n%v\n", 20, clientAddr, srv.ipConn.GetIpConn())
 		srv.ipConn.UnregisterIp(ipUint32)
 		return
@@ -311,15 +308,9 @@ func (srv *Server) handler(c net.Conn) {
 				}
 			} else if strings.ToLower(req.Header.Get("Connection")) != "keep-alive" {
 				keepAlive = false
-			}
-			if srv.UseSSL == true {
-				req.URL.Scheme = "https"
-			}else{
-				req.URL.Scheme = "http"
-			}			
+			}		
 			request := newRequest(req, c, startTime)
 			request.SetServerAddr(srv.listener.Addr().String())
-			Debug("remote: %s\n", request.RemoteAddr)
 			reqCount++
 
 			pssInit := new(PipelineStageStat)
