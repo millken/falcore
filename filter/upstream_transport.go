@@ -43,10 +43,20 @@ func NewUpstreamTransport(host string, port int, timeout time.Duration, transpor
 	}
 
 	ut.transport.Dial = func(n, addr string) (c net.Conn, err error) {
-		return ut.dial(n, addr)
+		return ut.dialn(n, addr)
 	}
 
 	return ut
+}
+
+func (t *UpstreamTransport) dialn(n, a string) (c net.Conn, err error) {
+	deadline := time.Now().Add(t.timeout)
+	c, err = net.DialTimeout("tcp4", fmt.Sprintf("%s:%d", t.host, t.port), t.timeout)
+	if err != nil {
+		return
+	}
+	c.SetDeadline(deadline)
+	return
 }
 
 func (t *UpstreamTransport) dial(n, a string) (c net.Conn, err error) {

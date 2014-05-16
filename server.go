@@ -286,7 +286,7 @@ func (srv *Server) handler(c net.Conn) {
 	clientAddr := c.RemoteAddr().(*net.TCPAddr).IP.To4()
 	ipUint32 := utils.Ip4ToUint32(clientAddr)
 	if srv.ipConn.RegisterIp(ipUint32) > 200 {
-		Debug("Too many concurrent connections (more than %d) from ip=%s. Denying new connection from the ip\n%v\n", 20, clientAddr, srv.ipConn.GetIpConn())
+		//Debug("Too many concurrent connections (more than %d) from ip=%s. Denying new connection from the ip\n%v\n", 20, clientAddr, srv.ipConn.GetIpConn())
 		srv.ipConn.UnregisterIp(ipUint32)
 		return
 	}
